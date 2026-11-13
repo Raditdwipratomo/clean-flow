@@ -10,7 +10,9 @@ import 'dotenv/config';
 import { query } from './db.js';
 
 const app=express(), port=process.env.PORT||4000, secret=process.env.JWT_SECRET||'dev-secret-change-me';
-const root=path.dirname(fileURLToPath(import.meta.url)), uploadDir=path.join(root,'uploads'); fs.mkdirSync(uploadDir,{recursive:true});
+const root=path.dirname(fileURLToPath(import.meta.url));
+const uploadDir=(process.env.VERCEL || process.env.NETLIFY)?path.join('/tmp','uploads'):path.join(root,'uploads');
+try{fs.mkdirSync(uploadDir,{recursive:true});}catch(err){console.warn('Failed to create upload dir:',err);}
 app.use(cors({origin:process.env.CLIENT_ORIGIN?.split(',')||true})); app.use(express.json({limit:'2mb'})); app.use('/uploads',express.static(uploadDir));
 const storage=multer.diskStorage({destination:uploadDir,filename:(req,file,cb)=>cb(null,`${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname).toLowerCase()}`)});
 const upload=multer({storage,limits:{fileSize:5*1024*1024},fileFilter:(req,file,cb)=>cb(null,/^image\/(jpeg|png|webp)$/.test(file.mimetype))});
@@ -48,5 +50,13 @@ app.get('/api/notifications',auth,wrap(async(req,res)=>{const {rows}=await query
 app.patch('/api/notifications/:id/read',auth,wrap(async(req,res)=>{await query('UPDATE notifications SET is_read=true WHERE id=$1 AND user_id=$2',[req.params.id,req.user.id]);res.json({ok:true})}));
 app.patch('/api/notifications/read-all',auth,wrap(async(req,res)=>{await query('UPDATE notifications SET is_read=true WHERE user_id=$1',[req.user.id]);res.json({ok:true})}));
 app.get('/api/admin/reports/export',auth,allow('ADMIN'),wrap(async(req,res)=>{const {rows}=await query('SELECT report_no,title,category,location,priority,status,created_at,updated_at FROM reports ORDER BY created_at DESC');const esc=v=>`"${String(v??'').replaceAll('"','""')}"`;res.type('text/csv').attachment('cleanflow-reports.csv').send(['report_no,title,category,location,priority,status,submitted_at,updated_at',...rows.map(r=>[r.report_no,r.title,r.category,r.location,r.priority,r.status,r.created_at,r.updated_at].map(esc).join(','))].join('\n'))}));
+// Production serves the compiled React app and API from one origin.
+const webRoot=path.resolve(root,'../dist');
+if(fs.existsSync(webRoot)){app.use(express.static(webRoot));app.get('*',(req,res,next)=>req.path.startsWith('/api/')?next():res.sendFile(path.join(webRoot,'index.html')))}
 app.use((err,req,res,next)=>{console.error(err);res.status(err.code==='LIMIT_FILE_SIZE'?400:500).json({error:err.code==='LIMIT_FILE_SIZE'?'Ukuran gambar maksimal 5 MB.':err.message?.includes('duplicate key')?'Email sudah digunakan.':'Terjadi kesalahan server.'})});
-app.listen(port,()=>console.log(`CleanFlow API listening on http://localhost:${port}`));
+// Vercel / Netlify imports the Express app as a serverless function; persistent servers (Render, Railway, VPS, local) run the listener.
+const isServerless = Boolean(process.env.VERCEL || process.env.NETLIFY === 'true');
+if (!isServerless) {
+  app.listen(port, () => console.log(`CleanFlow API listening on http://localhost:${port}`));
+}
+export default app;
