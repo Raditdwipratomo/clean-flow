@@ -8,8 +8,8 @@ const isRemoteDb = Boolean(dbUrl && !dbUrl.includes('localhost') && !dbUrl.inclu
 export const pool = new Pool({
   connectionString: dbUrl,
   ssl: isRemoteDb ? { rejectUnauthorized: false } : undefined,
-  connectionTimeoutMillis: 5000,
-  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 15000,
+  idleTimeoutMillis: 20000,
   max: 10
 });
 
