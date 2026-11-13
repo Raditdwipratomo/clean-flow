@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import { query } from './db.js';
@@ -13,10 +14,25 @@ const app=express(), port=process.env.PORT||4000, secret=process.env.JWT_SECRET|
 const root = typeof __dirname !== 'undefined'
   ? __dirname
   : (typeof import.meta !== 'undefined' && import.meta.url ? path.dirname(fileURLToPath(import.meta.url)) : process.cwd());
-const uploadDir = (process.env.VERCEL || process.env.NETLIFY) ? path.join('/tmp', 'uploads') : path.join(root, 'uploads');
+
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.NETLIFY ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT ||
+  (typeof root === 'string' && root.startsWith('/var/task'))
+);
+
+const uploadDir = isServerless ? path.join(os.tmpdir(), 'uploads') : path.join(root, 'uploads');
 try{fs.mkdirSync(uploadDir,{recursive:true});}catch(err){console.warn('Failed to create upload dir:',err);}
 app.use(cors({origin:process.env.CLIENT_ORIGIN?.split(',')||true})); app.use(express.json({limit:'2mb'})); app.use('/uploads',express.static(uploadDir));
-const storage=multer.diskStorage({destination:uploadDir,filename:(req,file,cb)=>cb(null,`${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname).toLowerCase()}`)});
+const storage=multer.diskStorage({
+  destination:(req,file,cb)=>{
+    try{fs.mkdirSync(uploadDir,{recursive:true});}catch(_){}
+    cb(null,uploadDir);
+  },
+  filename:(req,file,cb)=>cb(null,`${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname).toLowerCase()}`)
+});
 const upload=multer({storage,limits:{fileSize:5*1024*1024},fileFilter:(req,file,cb)=>cb(null,/^image\/(jpeg|png|webp)$/.test(file.mimetype))});
 const auth=(req,res,next)=>{try{const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'');req.user=jwt.verify(token,secret);next()}catch{return res.status(401).json({error:'Silakan masuk kembali.'})}};
 const allow=(...roles)=>(req,res,next)=>roles.includes(req.user.role)?next():res.status(403).json({error:'Akses tidak diizinkan.'});
@@ -63,7 +79,6 @@ app.use((err,req,res,next)=>{
   res.status(status).json({error:message});
 });
 // Vercel / Netlify imports the Express app as a serverless function; persistent servers (Render, Railway, VPS, local) run the listener.
-const isServerless = Boolean(process.env.VERCEL || process.env.NETLIFY === 'true');
 if (!isServerless) {
   app.listen(port, () => console.log(`CleanFlow API listening on http://localhost:${port}`));
 }
