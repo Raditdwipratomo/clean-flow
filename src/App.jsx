@@ -52,7 +52,6 @@ export default function App() {
   const [authMode, setAuthMode] = useState(() =>
     window.location.pathname === '/register' ? 'register' : 'login'
   );
-  const [prefillEmail, setPrefillEmail] = useState('');
 
   // App state
   const [page, setPage] = useState('dashboard');
@@ -118,9 +117,8 @@ export default function App() {
     refreshData();
   }, [refreshData]);
 
-  const handleNavigateAuth = (mode = 'login', email = '') => {
+  const handleNavigateAuth = (mode = 'login') => {
     setAuthMode(mode);
-    setPrefillEmail(email);
     setPublicView('auth');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -177,7 +175,6 @@ export default function App() {
         {publicView === 'auth' ? (
           <AuthPage
             initialMode={authMode}
-            prefillEmail={prefillEmail}
             onBack={() => setPublicView('landing')}
             onSuccess={handleAuthSuccess}
           />

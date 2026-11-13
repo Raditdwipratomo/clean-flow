@@ -26,7 +26,13 @@ import {
   getCategoryLabel,
 } from '../components/ui.jsx';
 import { apiRequest } from '../lib/api.js';
-import { CATEGORIES, DEMO_ACCOUNTS, formatDate } from '../lib/constants.js';
+import { CATEGORIES, formatDate } from '../lib/constants.js';
+
+const ROLE_TABS = [
+  { role: 'CITIZEN', label: 'Warga' },
+  { role: 'ADMIN', label: 'Admin' },
+  { role: 'OFFICER', label: 'Petugas' },
+];
 
 const HERO_CASES = [
   {
@@ -106,9 +112,9 @@ const ROLE_SHOWCASE = {
       'Pelacakan status 6 tahap transparan lengkap dengan riwayat kronologis.',
       'Hak konfirmasi penyelesaian & permintaan inspeksi ulang bila belum tuntas.',
     ],
-    ctaLabel: 'Coba Demo Warga',
-    demoEmail: 'rina@cleanflow.id',
-    previewTitle: 'Dasbor Warga — Rina Putri',
+    ctaLabel: 'Daftar Sebagai Warga',
+    authMode: 'register',
+    previewTitle: 'Dasbor Warga — Ringkasan Laporan',
     previewStats: [
       { label: 'Total Laporan', val: '8' },
       { label: 'Diproses', val: '3' },
@@ -124,8 +130,8 @@ const ROLE_SHOWCASE = {
       'Penugasan cerdas dengan visibilitas beban kerja aktif tiap petugas lapangan.',
       'Analitik kategori, distribusi status real-time, serta ekspor laporan ke CSV.',
     ],
-    ctaLabel: 'Coba Demo Admin',
-    demoEmail: 'admin@cleanflow.id',
+    ctaLabel: 'Masuk Portal Admin',
+    authMode: 'login',
     previewTitle: 'Ringkasan Operasional Admin',
     previewStats: [
       { label: 'Perlu Verifikasi', val: '12' },
@@ -142,9 +148,9 @@ const ROLE_SHOWCASE = {
       'Catat temuan inspeksi kerusakan serta tingkat keparahan di lapangan.',
       'Kirim pembaruan progres perbaikan dan dokumentasi foto setelah perbaikan.',
     ],
-    ctaLabel: 'Coba Demo Petugas',
-    demoEmail: 'budi@cleanflow.id',
-    previewTitle: 'Dasbor Petugas — Budi Santoso',
+    ctaLabel: 'Masuk Portal Petugas',
+    authMode: 'login',
+    previewTitle: 'Dasbor Petugas — Tugas Lapangan',
     previewStats: [
       { label: 'Tugas Aktif', val: '4' },
       { label: 'Menunggu Respon', val: '1' },
@@ -562,7 +568,7 @@ export default function LandingPage({ onNavigateAuth }) {
           </div>
 
           <div className="role-tabs">
-            {DEMO_ACCOUNTS.map((acc) => (
+            {ROLE_TABS.map((acc) => (
               <button
                 key={acc.role}
                 type="button"
@@ -591,13 +597,10 @@ export default function LandingPage({ onNavigateAuth }) {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() => onNavigateAuth('login', currentRole.demoEmail)}
+                  onClick={() => onNavigateAuth(currentRole.authMode)}
                 >
                   {currentRole.ctaLabel} <ArrowRight size={16} />
                 </button>
-                <small className="demo-hint">
-                  Email demo: <code>{currentRole.demoEmail}</code> · Sandi: <code>cleanflow123</code>
-                </small>
               </div>
             </div>
 
@@ -734,10 +737,10 @@ export default function LandingPage({ onNavigateAuth }) {
             <button type="button" onClick={() => onNavigateAuth('register')}>
               Daftar Akun Warga
             </button>
-            <button type="button" onClick={() => onNavigateAuth('login', 'admin@cleanflow.id')}>
+            <button type="button" onClick={() => onNavigateAuth('login')}>
               Portal Admin
             </button>
-            <button type="button" onClick={() => onNavigateAuth('login', 'budi@cleanflow.id')}>
+            <button type="button" onClick={() => onNavigateAuth('login')}>
               Portal Petugas Lapangan
             </button>
           </div>

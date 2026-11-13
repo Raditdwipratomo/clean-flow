@@ -91,30 +91,6 @@ export function getStepIndex(status) {
   }
 }
 
-export const DEMO_ACCOUNTS = [
-  {
-    role: 'CITIZEN',
-    label: 'Warga',
-    name: 'Rina Putri',
-    email: 'rina@cleanflow.id',
-    desc: 'Buat laporan & lacak progres',
-  },
-  {
-    role: 'ADMIN',
-    label: 'Admin',
-    name: 'Admin CleanFlow',
-    email: 'admin@cleanflow.id',
-    desc: 'Verifikasi, tugaskan & analitik',
-  },
-  {
-    role: 'OFFICER',
-    label: 'Petugas',
-    name: 'Budi Santoso',
-    email: 'budi@cleanflow.id',
-    desc: 'Inspeksi lapangan & perbaikan',
-  },
-];
-
 export function formatDate(dateStr) {
   if (!dateStr) return '-';
   const d = new Date(dateStr);

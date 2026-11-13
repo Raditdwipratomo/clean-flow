@@ -13,19 +13,17 @@ import {
 } from 'lucide-react';
 import { BrandLogo } from '../components/ui.jsx';
 import { apiRequest } from '../lib/api.js';
-import { DEMO_ACCOUNTS } from '../lib/constants.js';
 
 export default function AuthPage({
   initialMode = 'login',
-  prefillEmail = '',
   onBack,
   onSuccess,
 }) {
   const [mode, setMode] = useState(initialMode);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState(prefillEmail);
-  const [password, setPassword] = useState(prefillEmail ? 'cleanflow123' : '');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -34,13 +32,6 @@ export default function AuthPage({
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
-
-  useEffect(() => {
-    if (prefillEmail) {
-      setEmail(prefillEmail);
-      setPassword('cleanflow123');
-    }
-  }, [prefillEmail]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,13 +64,6 @@ export default function AuthPage({
     } finally {
       setBusy(false);
     }
-  };
-
-  const applyDemo = (demoEmail) => {
-    setMode('login');
-    setEmail(demoEmail);
-    setPassword('cleanflow123');
-    setErr('');
   };
 
   return (
@@ -241,25 +225,6 @@ export default function AuthPage({
               )}
             </button>
           </form>
-
-          {mode === 'login' && (
-            <div className="demo-box">
-              <span className="demo-box-title">Isi cepat akun demo (sandi: cleanflow123)</span>
-              <div className="demo-pills">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.role}
-                    type="button"
-                    className={`demo-pill ${email === acc.email ? 'active' : ''}`}
-                    onClick={() => applyDemo(acc.email)}
-                  >
-                    <b>{acc.label}</b>
-                    <small>{acc.email}</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
