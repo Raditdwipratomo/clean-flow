@@ -53,7 +53,13 @@ app.get('/api/admin/reports/export',auth,allow('ADMIN'),wrap(async(req,res)=>{co
 // Production serves the compiled React app and API from one origin.
 const webRoot=path.resolve(root,'../dist');
 if(fs.existsSync(webRoot)){app.use(express.static(webRoot));app.get('*',(req,res,next)=>req.path.startsWith('/api/')?next():res.sendFile(path.join(webRoot,'index.html')))}
-app.use((err,req,res,next)=>{console.error(err);res.status(err.code==='LIMIT_FILE_SIZE'?400:500).json({error:err.code==='LIMIT_FILE_SIZE'?'Ukuran gambar maksimal 5 MB.':err.message?.includes('duplicate key')?'Email sudah digunakan.':'Terjadi kesalahan server.'})});
+app.use('/api', (req, res) => res.status(404).json({ error: 'Endpoint API tidak ditemukan.' }));
+app.use((err,req,res,next)=>{
+  console.error(err);
+  const status=err.code==='LIMIT_FILE_SIZE'?400:(err.status||500);
+  const message=err.code==='LIMIT_FILE_SIZE'?'Ukuran gambar maksimal 5 MB.':err.message?.includes('duplicate key')?'Email sudah digunakan.':(err.message||'Terjadi kesalahan server.');
+  res.status(status).json({error:message});
+});
 // Vercel / Netlify imports the Express app as a serverless function; persistent servers (Render, Railway, VPS, local) run the listener.
 const isServerless = Boolean(process.env.VERCEL || process.env.NETLIFY === 'true');
 if (!isServerless) {

@@ -1,9 +1,21 @@
 import pg from 'pg';
 import 'dotenv/config';
 const { Pool } = pg;
-const isRemoteDb = Boolean(process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1'));
+
+const dbUrl = process.env.DATABASE_URL;
+const isRemoteDb = Boolean(dbUrl && !dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1'));
+
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: isRemoteDb ? { rejectUnauthorized: false } : undefined
+  connectionString: dbUrl,
+  ssl: isRemoteDb ? { rejectUnauthorized: false } : undefined,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 10000,
+  max: 10
 });
-export const query = (text, params) => pool.query(text, params);
+
+export const query = async (text, params) => {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is not set. Please add it to your Vercel Project Settings.');
+  }
+  return pool.query(text, params);
+};
