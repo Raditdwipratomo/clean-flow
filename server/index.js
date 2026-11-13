@@ -10,8 +10,10 @@ import 'dotenv/config';
 import { query } from './db.js';
 
 const app=express(), port=process.env.PORT||4000, secret=process.env.JWT_SECRET||'dev-secret-change-me';
-const root=path.dirname(fileURLToPath(import.meta.url));
-const uploadDir=(process.env.VERCEL || process.env.NETLIFY)?path.join('/tmp','uploads'):path.join(root,'uploads');
+const root = typeof __dirname !== 'undefined'
+  ? __dirname
+  : (typeof import.meta !== 'undefined' && import.meta.url ? path.dirname(fileURLToPath(import.meta.url)) : process.cwd());
+const uploadDir = (process.env.VERCEL || process.env.NETLIFY) ? path.join('/tmp', 'uploads') : path.join(root, 'uploads');
 try{fs.mkdirSync(uploadDir,{recursive:true});}catch(err){console.warn('Failed to create upload dir:',err);}
 app.use(cors({origin:process.env.CLIENT_ORIGIN?.split(',')||true})); app.use(express.json({limit:'2mb'})); app.use('/uploads',express.static(uploadDir));
 const storage=multer.diskStorage({destination:uploadDir,filename:(req,file,cb)=>cb(null,`${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname).toLowerCase()}`)});
